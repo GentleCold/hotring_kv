@@ -1,10 +1,11 @@
-file(GLOB_RECURSE ALL_SRCS *.cpp)
-add_library(hotring STATIC ${ALL_SRCS})
+set(SOURCES hotring.cpp hrnode.cpp)
+add_library(hotring STATIC ${SOURCES})
 # add_library(shared SHARED ${ALL_SRCS})
 
 #
 # Possible link
 #
 
-# target_link_libraries(static armadillo)
-# add_executable(main main.cpp)
+add_executable(client client.cpp)
+add_executable(server server.cpp)
+target_link_libraries(server hotring)

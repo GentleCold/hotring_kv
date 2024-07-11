@@ -6,7 +6,7 @@
 #include "utils.hpp"
 
 TEST(HotRingTest, Put) {
-  hotring::HotRing ring(8);
+  hotring::HotRing ring(2);  // 2^2 = 4
 
   // simple put and read
   ring.put("a", "b");

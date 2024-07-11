@@ -8,7 +8,7 @@ void HotRing::put(const std::string& key, const std::string& value) {
   size_t tag = (hash & (~_hash_mask)) >> _index_bits;
 
   auto* item = new ItemNode(tag, nullptr, key, value);
-  if (_table[index] == nullptr) {
+  if (_table[index] == nullptr) {  // no item
     item->set_next(item);
     _table[index] = std::make_unique<HeadNode>(item);
     return;
@@ -18,15 +18,18 @@ void HotRing::put(const std::string& key, const std::string& value) {
   ItemNode* cur = head->get_head();
 
   while (true) {
+    // update
     if ((*cur) == (*item)) {
       cur->set_value(value);
+      delete item;
       break;
     }
 
     auto* next = cur->get_next();
 
     // between, largest or smallest
-    if ((*cur > *next && (*item > *cur || *next > *item)) ||
+    // or only one item
+    if ((cur == next) || (*cur > *next && (*item > *cur || *next > *item)) ||
         (*item > *cur && *next > *item)) {
       item->set_next(next);
       cur->set_next(item);
@@ -62,6 +65,9 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
     }
 
     auto* next = cur->get_next();
+    if (cur == next) {  // only one item
+      break;
+    }
 
     // between, largest or smallest
     if ((*cur > *next && (compare > *cur || *next > compare)) ||
