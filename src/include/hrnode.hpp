@@ -22,6 +22,7 @@ class ItemNode {
   const std::string& get_value() const& { return _value; }
 
   void set_next(ItemNode* ptr) { _next = ptr; }
+  void set_value(const std::string& value) { _value = value; }
 
   ItemNode* get_next();
 
