@@ -5,6 +5,7 @@
 TEST(NodeTest, Counter) {
   // init
   auto *item = new hotring::ItemNode(0, nullptr, "key", "value");
+  item->set_next(item);
   auto head = hotring::HeadNode(item);
 
   // increase 10 times

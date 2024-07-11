@@ -1,7 +1,7 @@
 #ifndef INCLUDE_INCLUDE_HRNODE_HPP_
 #define INCLUDE_INCLUDE_HRNODE_HPP_
 
-#include <memory>
+#include <cassert>
 #include <string>
 
 namespace hotring {
@@ -14,14 +14,14 @@ constexpr size_t ACTIVE_MASK = REHASH_MASK;
 
 class ItemNode {
  public:
-  ItemNode(size_t tag, ItemNode* ptr, std::string&& key, std::string&& value)
+  ItemNode(size_t tag, ItemNode* ptr, std::string key, std::string value)
       : _tag(tag), _next(ptr), _key(std::move(key)), _value(std::move(value)) {}
 
   size_t get_tag() const& { return _tag; }
   const std::string& get_key() const& { return _key; }
   const std::string& get_value() const& { return _value; }
 
-  void set_next(ItemNode* ptr) { _next.reset(ptr); }
+  void set_next(ItemNode* ptr) { _next = ptr; }
 
   ItemNode* get_next();
 
@@ -40,17 +40,22 @@ class ItemNode {
   void inc_count();
   void reset_count();
 
-  // safe release
-  ~ItemNode() {
-    reset_rehash();
-    reset_occupied();
-    reset_count();
+  // for compare
+  bool operator==(const ItemNode& other) const {
+    return _tag == other._tag && _key == other._key;
+  }
+
+  bool operator>(const ItemNode& other) const {
+    if (_tag == other._tag) {
+      return _key > other._key;
+    }
+    return _tag > other._tag;
   }
 
  private:
   size_t _tag;
   // 1bit rehash + 1bit occupied + 14bits counter + 48bits address
-  std::unique_ptr<ItemNode> _next;
+  ItemNode* _next;
   std::string _key;
   std::string _value;
 
@@ -59,9 +64,13 @@ class ItemNode {
 
 class HeadNode {
  public:
-  explicit HeadNode(ItemNode* ptr) : _head(ptr) {}
+  explicit HeadNode(ItemNode* ptr) : _head(ptr) { assert(ptr != nullptr); }
 
   ItemNode* get_head();
+  void set_head(ItemNode* ptr);
+
+  void inc_size() { ++_size; }
+  void dec_size() { --_size; }
 
   // if active is true, then make statistical sampling
   bool is_active();
@@ -75,13 +84,19 @@ class HeadNode {
 
   // safe release
   ~HeadNode() {
-    reset_active();
-    reset_total_count();
+    ItemNode* cur = get_head();
+    while (_size) {
+      --_size;
+      ItemNode* next = cur->get_next();
+      delete cur;
+      cur = next;
+    }
   };
 
  private:
+  size_t _size = 1;
   // 1bit active + 15bits counter + 48bits address
-  std::unique_ptr<ItemNode> _head;
+  ItemNode* _head;
 
   static constexpr size_t MAX_COUNT = 1UL << 15U;  // 2^15
 };
