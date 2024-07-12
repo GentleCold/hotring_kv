@@ -1,4 +1,4 @@
-set(SOURCES hotring.cpp hrnode.cpp)
+set(SOURCES hotring/hotring.cpp hotring/hrnode.cpp)
 add_library(hotring STATIC ${SOURCES})
 # add_library(shared SHARED ${ALL_SRCS})
 
