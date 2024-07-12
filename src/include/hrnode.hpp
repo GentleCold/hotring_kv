@@ -70,6 +70,7 @@ class HeadNode {
   ItemNode* get_head();
   void set_head(ItemNode* ptr);
 
+  size_t get_size() const { return _size; }
   void inc_size() { ++_size; }
   void dec_size() { --_size; }
 

@@ -9,6 +9,8 @@
 
 namespace hotring {
 
+constexpr size_t HOTSPOT_R = 5;
+
 class HotRing {
  public:
   HotRing(size_t bits) : _index_bits(bits), _table(0) {
@@ -25,6 +27,8 @@ class HotRing {
   // n bits tag +  k bits hash
   inline static std::hash<std::string> _hash_func =
       std::hash<std::string>();  // hash func for string
+  size_t _access = 0;
+  size_t _sample_num;
   size_t _index_bits;
   size_t _hash_mask;
 
