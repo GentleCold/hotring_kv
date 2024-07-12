@@ -59,7 +59,7 @@ void five_minute_run(DataSet &data, double hot_ratio, int client_fd,
   };
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   // create socket
   int client_fd = socket(AF_INET, SOCK_STREAM, 0);
   assert(client_fd != -1);
@@ -77,18 +77,20 @@ int main() {
   DataSet data(NUM_KEYS);
 
   // 5-minute loop
+  std::string file_name = "./utils/" + std::string(argv[1]);
+
   std::cout << "start test1..." << '\n';
-  std::ofstream output_file_1("./utils/load_data_20.txt", std::ios::out);
+  std::ofstream output_file_1(file_name + "_20.txt", std::ios::out);
   five_minute_run(data, 0.2, client_fd, output_file_1);
   output_file_1.close();
 
   std::cout << "start test2..." << '\n';
-  std::ofstream output_file_2("./utils/load_data_40.txt", std::ios::out);
+  std::ofstream output_file_2(file_name + "_40.txt", std::ios::out);
   five_minute_run(data, 0.4, client_fd, output_file_2);
   output_file_2.close();
 
   std::cout << "start test3..." << '\n';
-  std::ofstream output_file_3("./utils/load_data_100.txt", std::ios::out);
+  std::ofstream output_file_3(file_name + "_100.txt", std::ios::out);
   five_minute_run(data, 1.0, client_fd, output_file_3);
   output_file_3.close();
 
