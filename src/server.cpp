@@ -9,11 +9,15 @@
 
 #include "hotring.hpp"
 
-#define SOCK_PORT 8000
+// server config
+#define SOCK_PORT 2024
 #define MAX_CONN_LIMIT 8
 
+// hotring config
+constexpr size_t HASH_BITS = 8;  // 2^8 = 256
+
 int main() {
-  hotring::HotRing ring(8);  // 2^8 = 256
+  hotring::HotRing ring(HASH_BITS);
 
   // create socket
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -35,31 +39,39 @@ int main() {
     if (client_fd < 0) {
       continue;
     } else {
+      int s = 0;
       while (true) {
-        char buffer[1024] = {0};
-        int valread = read(client_fd, buffer, 1024);
+        char buffer[128] = {0};
+        int valread = read(client_fd, buffer, 128);
 
         if (valread > 0) {
           std::string request(buffer);
           std::string operation, key, value;
+          // std::cout << "request: " << request << '\n';
 
           size_t pos = request.find(' ');
           operation = request.substr(0, pos);
           request.erase(0, pos + 1);
-          pos = request.find(' ');
-          key = request.substr(0, pos);
 
           if (operation == "put") {
+            pos = request.find(' ');
+            key = request.substr(0, pos);
             value = request.substr(pos + 1);
             ring.put(key, value);
             write(client_fd, "OK", 2);
-          } else {
+          } else if (operation == "read") {
+            pos = request.find(' ');
+            key = request.substr(0, pos);
             auto result = ring.read(key);
             if (result.first) {
-              write(client_fd, result.second.c_str(), result.second.length());
+              auto ret = write(client_fd, result.second.c_str(),
+                               result.second.length());
             } else {
-              write(client_fd, "", 1);
+              auto ret = write(client_fd, " ", 1);
             }
+          } else if (operation == "restart") {
+            ring = hotring::HotRing(HASH_BITS);
+            write(client_fd, "OK", 2);
           }
         } else {
           break;

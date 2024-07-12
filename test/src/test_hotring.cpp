@@ -22,7 +22,7 @@ TEST(HotRingTest, Put) {
 
   // random put and read
   std::unordered_map<std::string, std::string> kv;
-  for (int i = 0; i <= 100; ++i) {
+  for (int i = 0; i <= 1000; ++i) {
     auto key = gen_random_string(8);
     auto value = gen_random_string(16);
     ring.put(key, value);
