@@ -60,7 +60,8 @@ class DataSet {
       return _hot_keys[hot_dis(gen)];
     }
 
-    return hot_spot_dist(gen) ? _keys[dis(gen)] : _hot_keys[hot_dis(gen)];
+    // 0.8 for hot key
+    return hot_spot_dist(gen) ? _hot_keys[hot_dis(gen)] : _keys[dis(gen)];
   }
 
  public:  // NOLINT: set public for test
