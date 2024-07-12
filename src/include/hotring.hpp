@@ -23,11 +23,15 @@ class HotRing {
   void put(const std::string& key, const std::string& value);
   std::pair<bool, std::string> read(const std::string& key);
 
+  double get_average_load() const { return _total_access / _total_read; }
+
  private:
+  void _move_head(HeadNode* head, ItemNode* cur);
   // n bits tag +  k bits hash
   inline static std::hash<std::string> _hash_func =
       std::hash<std::string>();  // hash func for string
-  size_t _access = 0;
+  size_t _total_read = 0;        // inc every read
+  size_t _total_access = 0;      // total node access times
   size_t _sample_num;
   size_t _index_bits;
   size_t _hash_mask;

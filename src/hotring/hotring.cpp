@@ -43,8 +43,9 @@ void HotRing::put(const std::string& key, const std::string& value) {
   }
 }
 
-std::pair<bool, std::string> HotRing::read(const std::string& key) {  // NOLINT
-  ++_access;  // per request
+std::pair<bool, std::string> HotRing::read(const std::string& key) {
+  ++_total_read;  // per request
+  ++_total_access;
   size_t hash = _hash_func(key);
   size_t index = hash & _hash_mask;
   size_t tag = (hash & (~_hash_mask)) >> _index_bits;
@@ -72,10 +73,9 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {  // NOLINT
       find = true;
       ret = cur->get_value();
 
-      if (!active && _access >= HOTSPOT_R && head->get_head() != cur) {
+      if (!active && _total_read % HOTSPOT_R == 0 && head->get_head() != cur) {
         // find, but not the head node, start sampling
         head->set_active();
-        _access = 0;
         _sample_num = head->get_size();
       }
 
@@ -94,50 +94,57 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {  // NOLINT
     }
 
     cur = next;
+    ++_total_access;  // access for next item
   }
 
   if (active) {
     head->inc_total_count();
     if (head->get_total_count() >= _sample_num) {  // move head to hotspot
-      size_t size = head->get_size();
-      ItemNode* new_head = nullptr;
-
-      auto calculate = [size](ItemNode* cur) -> size_t {
-        size_t income = 0;
-        size_t i = 0;
-        while (i < size) {
-          income += i * cur->get_count();
-          cur = cur->get_next();
-          ++i;
-        }
-        return income;
-      };
-
-      size_t i = 0;
-      size_t min_size = std::numeric_limits<size_t>::max();
-      while (i < size) {
-        if (calculate(cur) < min_size) {
-          new_head = cur;
-        }
-        cur = cur->get_next();
-        ++i;
-      }
-
-      i = 0;
-      while (i < size) {
-        cur->reset_count();
-        cur = cur->get_next();
-        ++i;
-      }
-
-      head->set_head(new_head);
-      head->reset_active();
-      head->reset_total_count();
-      _access = 0;
+      _move_head(head, cur);
     }
   }
 
   return {find, ret};
+}
+
+void _move_head(HeadNode* head, ItemNode* cur) {
+  size_t size = head->get_size();
+  ItemNode* new_head = nullptr;
+
+  // calculate income of cur node
+  auto calculate = [size](ItemNode* cur) -> size_t {
+    size_t income = 0;
+    size_t i = 0;
+    while (i < size) {
+      income += i * cur->get_count();
+      cur = cur->get_next();
+      ++i;
+    }
+    return income;
+  };
+
+  size_t i = 0;
+  size_t min_size = std::numeric_limits<size_t>::max();
+
+  // find min income
+  while (i < size) {
+    if (calculate(cur) < min_size) {
+      new_head = cur;
+    }
+    cur = cur->get_next();
+    ++i;
+  }
+
+  i = 0;
+  while (i < size) {
+    cur->reset_count();
+    cur = cur->get_next();
+    ++i;
+  }
+
+  head->set_head(new_head);
+  head->reset_active();
+  head->reset_total_count();
 }
 
 }  // namespace hotring

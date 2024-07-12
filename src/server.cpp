@@ -14,7 +14,7 @@
 #define MAX_CONN_LIMIT 8
 
 // hotring config
-constexpr size_t HASH_BITS = 8;  // 2^8 = 256
+constexpr size_t HASH_BITS = 12;  // 2^12 = 4096
 
 int main() {
   hotring::HotRing ring(HASH_BITS);
