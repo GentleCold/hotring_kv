@@ -69,6 +69,18 @@ if __name__ == "__main__":
         width,
         label="HashTable",
     )
+
+    for i, (h_value, ht_value) in enumerate(
+        zip(
+            [sum(hotring_20), sum(hotring_40), sum(hotring_100)],
+            [sum(hash_20), sum(hash_40), sum(hash_100)],
+        )
+    ):
+        ax4.text(x[i] - width / 2, h_value, str(int(h_value)), ha="center", va="bottom")
+        ax4.text(
+            x[i] + width / 2, ht_value, str(int(ht_value)), ha="center", va="bottom"
+        )
+
     ax4.set_xticks(x)
     ax4.set_xticklabels(["X=20", "X=40", "X=100"])
     ax4.set_title("HotRing与HashTable的总负载比较")

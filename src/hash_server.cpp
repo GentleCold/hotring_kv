@@ -10,7 +10,7 @@
 
 // server config
 #define SOCK_PORT 2024
-#define MAX_CONN_LIMIT 8
+#define MAX_CONN_LIMIT 2
 
 int main() {
   std::unordered_map<std::string, std::string> table;

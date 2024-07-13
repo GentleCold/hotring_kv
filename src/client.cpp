@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-#define SOCK_PORT 8000
+#define SOCK_PORT 2024
 
 int main() {
   // create socket

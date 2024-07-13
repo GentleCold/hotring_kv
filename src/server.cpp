@@ -11,7 +11,7 @@
 
 // server config
 #define SOCK_PORT 2024
-#define MAX_CONN_LIMIT 8
+#define MAX_CONN_LIMIT 2
 
 // hotring config
 constexpr size_t HASH_BITS = 10;  // 2^10 = 1024

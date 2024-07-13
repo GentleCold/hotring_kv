@@ -1,0 +1,48 @@
+name: CI
+
+on: 
+    push:
+        branches:
+            - master
+
+jobs:
+
+  build-and-analyse:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Gather system information
+      run: |
+        echo "Operating System: $(uname -a)"
+        
+        echo "CPU info:"
+        cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ":" -f 2 | xargs)
+        cpu_cores=$(nproc)
+        echo "CPU Model: $cpu_model"
+        echo "CPU Cores: $cpu_cores"
+        
+        echo "Memory info:"
+        mem_total=$(free -h | grep Mem | awk '{print $2}')
+        echo "Total Memory: $mem_total"
+
+    - name: Install gtest
+      run: |
+        sudo apt-get install libgtest-dev
+        cd /usr/src/gtest
+        sudo cmake .
+        sudo make 
+        sudo cp lib/*.a /usr/lib
+
+    - name: Run build script
+      run: bash build.sh r
+      
+    - name: Run analyse script
+      run: bash analyse.sh
+      
+    - name: Archive build data
+      uses: actions/upload-artifact@v2
+      with:
+        name: output
+        path: utils/

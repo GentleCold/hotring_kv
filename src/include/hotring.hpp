@@ -29,14 +29,19 @@ class HotRing {
   size_t get_bucket_size() { return _table.size(); }
 
  private:
-  double _get_average_load() const { return _total_access / _total_request; }
+  size_t _get_average_load() const {
+    if (_total_request == 0) {
+      return 0;
+    }
+    return _total_access / _total_request;
+  }
   void _move_head(HeadNode* head, ItemNode* cur);
   void _rehash();
 
   // k bits hash + n - k bits tag
   inline static std::hash<std::string> _hash_func =
       std::hash<std::string>();  // hash func for string
-  size_t _total_request = 0;        // inc every read
+  size_t _total_request = 0;     // inc every read
   size_t _total_access = 0;      // total node access times
   size_t _sample_num;            // record sample num when active
   size_t _tag_bits;              // tag_bits may decrease

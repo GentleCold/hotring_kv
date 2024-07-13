@@ -2,7 +2,6 @@
 
 # generate data
 echo "===Run Hotring==="
-
 ./bin/server &
 sleep 1
 ./bin/random_load hotring
