@@ -21,6 +21,7 @@ class ItemNode {
   const std::string& get_key() const& { return _key; }
   const std::string& get_value() const& { return _value; }
 
+  void set_tag(size_t tag) { _tag = tag; }
   void set_next(ItemNode* ptr) { _next = ptr; }
   void set_value(const std::string& value) { _value = value; }
 
@@ -71,6 +72,7 @@ class HeadNode {
   void set_head(ItemNode* ptr);
 
   size_t get_size() const { return _size; }
+  void set_size(size_t size) { _size = size; }
   void inc_size() { ++_size; }
   void dec_size() { --_size; }
 
