@@ -18,6 +18,14 @@ void five_minute_run(DataSet &data, double hot_ratio, int client_fd,
                      std::ofstream &output_file) {
   data.transform(hot_ratio);
   for (int minute = 0; minute < 5; minute++) {
+    std::string request = "info ";
+    write(client_fd, request.c_str(), request.length());
+    char buffer[3] = {0};
+    read(client_fd, buffer, 2);
+    if (std::string(buffer) != "OK") {
+      exit(1);
+    };
+
     int minute_load_count = 0;
     auto start = std::chrono::system_clock::now();
     while (std::chrono::duration_cast<std::chrono::milliseconds>(

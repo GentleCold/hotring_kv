@@ -14,7 +14,7 @@
 #define MAX_CONN_LIMIT 8
 
 // hotring config
-constexpr size_t HASH_BITS = 12;  // 2^12 = 4096
+constexpr size_t HASH_BITS = 10;  // 2^10 = 1024
 
 int main() {
   hotring::HotRing ring(HASH_BITS);
@@ -72,7 +72,11 @@ int main() {
           } else if (operation == "restart") {
             ring = hotring::HotRing(HASH_BITS);
             write(client_fd, "OK", 2);
+          } else if (operation == "info") {
+            std::cout << "bucket size: " << ring.get_bucket_size() << '\n';
+            write(client_fd, "OK", 2);
           }
+
         } else {
           break;
         }

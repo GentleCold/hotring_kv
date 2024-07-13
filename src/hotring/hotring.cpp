@@ -22,11 +22,17 @@ void HotRing::put(const std::string& key, const std::string& value) {
   HeadNode* head = _table[index].get();
   ItemNode* cur = head->get_head();
 
+  size_t access = 0;
   while (true) {
+    ++access;
     // update
     if ((*cur) == (*item)) {
       cur->set_value(value);
       delete item;
+
+      // record access
+      ++_total_request;
+      _total_access += access;
       break;
     }
 
@@ -46,8 +52,6 @@ void HotRing::put(const std::string& key, const std::string& value) {
 }
 
 std::pair<bool, std::string> HotRing::read(const std::string& key) {
-  ++_total_read;  // per request
-  ++_total_access;
   size_t hash = _hash_func(key);
   // index bits + tag bits
   size_t index = (hash & (~_tag_mask)) >> _tag_bits;
@@ -66,7 +70,9 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
   // is active
   bool active = head->is_active();
 
+  size_t access = 0;
   while (true) {
+    ++access;
     if (active) {
       cur->inc_count();
     }
@@ -76,7 +82,8 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
       find = true;
       ret = cur->get_value();
 
-      if (!active && _total_read % HOTSPOT_R == 0 && head->get_head() != cur) {
+      if (!active && _total_request % HOTSPOT_R == 0 &&
+          head->get_head() != cur) {
         // find, but not the head node, start sampling
         head->set_active();
         _sample_num = HOTSPOT_R;  // in paper, it's the size of ring
@@ -100,6 +107,11 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
     ++_total_access;  // access for next item
   }
 
+  if (find) {
+    ++_total_request;
+    _total_access += access;
+  }
+
   if (active) {
     head->inc_total_count();
     if (head->get_total_count() >= _sample_num) {  // move head to hotspot
@@ -108,7 +120,7 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
   } else if (_get_average_load() >= MAX_LOAD_FACTOR) {
     _rehash();
     // reset average load
-    _total_read = 0;
+    _total_request = 0;
     _total_access = 0;
   }
 

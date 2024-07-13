@@ -68,7 +68,11 @@ int main() {
           } else if (operation == "restart") {
             table.clear();
             write(client_fd, "OK", 2);
+          } else if (operation == "info") {
+            std::cout << "bucket size: " << table.bucket_count() << '\n';
+            write(client_fd, "OK", 2);
           }
+
         } else {
           break;
         }
