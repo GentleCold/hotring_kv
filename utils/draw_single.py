@@ -4,7 +4,7 @@ import numpy as np
 
 from matplotlib import rcParams
 
-rcParams["font.family"] = "Maple Mono SC NF"
+rcParams["font.family"] = "simhei"
 
 
 if __name__ == "__main__":

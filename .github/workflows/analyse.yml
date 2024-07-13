@@ -39,6 +39,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install matplotlib
+        git clone https://github.com/tracyone/program_font 
+        cd program_font 
+        ./install.sh
 
     - name: Run build script
       run: bash build.sh r
