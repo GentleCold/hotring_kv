@@ -102,7 +102,8 @@ int main(int argc, char *argv[]) {
   five_minute_run(data, 1.0, client_fd, output_file_3);
   output_file_3.close();
 
+  std::string request = "kill ";
+  write(client_fd, request.c_str(), request.length());
   close(client_fd);
-
   return 0;
 }

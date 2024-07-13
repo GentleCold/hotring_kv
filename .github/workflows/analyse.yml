@@ -35,6 +35,11 @@ jobs:
         sudo make 
         sudo cp lib/*.a /usr/lib
 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install matplotlib
+
     - name: Run build script
       run: bash build.sh r
       

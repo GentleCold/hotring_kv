@@ -11,7 +11,7 @@
 
 // server config
 #define SOCK_PORT 2024
-#define MAX_CONN_LIMIT 2
+#define MAX_CONN_LIMIT 8
 
 // hotring config
 constexpr size_t HASH_BITS = 10;  // 2^10 = 1024
@@ -75,8 +75,9 @@ int main() {
           } else if (operation == "info") {
             std::cout << "bucket size: " << ring.get_bucket_size() << '\n';
             write(client_fd, "OK", 2);
+          } else if (operation == "kill") {
+            exit(0);
           }
-
         } else {
           break;
         }

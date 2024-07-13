@@ -10,7 +10,7 @@
 
 // server config
 #define SOCK_PORT 2024
-#define MAX_CONN_LIMIT 2
+#define MAX_CONN_LIMIT 8
 
 int main() {
   std::unordered_map<std::string, std::string> table;
@@ -71,8 +71,9 @@ int main() {
           } else if (operation == "info") {
             std::cout << "bucket size: " << table.bucket_count() << '\n';
             write(client_fd, "OK", 2);
+          } else if (operation == "kill") {
+            exit(0);
           }
-
         } else {
           break;
         }
