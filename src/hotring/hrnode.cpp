@@ -126,4 +126,12 @@ void HeadNode::reset_total_count() {
   _head = reinterpret_cast<ItemNode*>(ptr);
 }
 
+void HeadNode::adjust_tag(size_t split) {
+  ItemNode *cur = get_head(), *head = cur;
+  do {
+    cur->set_tag(cur->get_tag() - split);
+    cur = cur->get_next();
+  } while (cur != head);
+}
+
 }  // namespace hotring

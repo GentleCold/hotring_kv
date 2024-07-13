@@ -19,8 +19,8 @@ class HotRing {
    */
   HotRing(size_t bits) : _tag_bits(64 - bits), _table(0) {
     assert(bits < 64);
-    _tag_mask = (1 << _tag_bits) - 1;
-    _table.resize(1 << bits);
+    _tag_mask = (1UL << _tag_bits) - 1;
+    _table.resize(1UL << bits);
   };
 
   void put(const std::string& key, const std::string& value);

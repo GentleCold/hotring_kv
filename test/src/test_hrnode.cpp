@@ -40,6 +40,7 @@ TEST(NodeTest, Counter) {
 TEST(NodeTest, Flag) {
   // init
   auto *item = new hotring::ItemNode(0, nullptr, "key", "value");
+  item->set_next(item);
   auto head = hotring::HeadNode(item);
 
   // active
@@ -60,6 +61,7 @@ TEST(NodeTest, Flag) {
 TEST(NodeTest, SafeRelease) {
   // init
   auto *item = new hotring::ItemNode(0, nullptr, "key", "value");
+  item->set_next(item);
   auto *head = new hotring::HeadNode(item);
 
   head->inc_total_count();

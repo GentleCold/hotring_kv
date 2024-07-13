@@ -38,7 +38,6 @@ void HotRing::put(const std::string& key, const std::string& value) {
         (*item > *cur && *next > *item)) {
       item->set_next(next);
       cur->set_next(item);
-      head->inc_size();
       break;
     }
 
@@ -80,7 +79,7 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
       if (!active && _total_read % HOTSPOT_R == 0 && head->get_head() != cur) {
         // find, but not the head node, start sampling
         head->set_active();
-        _sample_num = head->get_size();
+        _sample_num = HOTSPOT_R;  // in paper, it's the size of ring
       }
 
       break;
@@ -117,18 +116,18 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
 }
 
 void HotRing::_move_head(HeadNode* head, ItemNode* cur) {
-  size_t size = head->get_size();
   ItemNode* new_head = nullptr;
 
   // calculate income of cur node
-  auto calculate = [size](ItemNode* cur) -> size_t {
+  auto calculate = [](ItemNode* cur) -> size_t {
     size_t income = 0;
     size_t i = 0;
-    while (i < size) {
+    ItemNode* head = cur;
+    do {
       income += i * cur->get_count();
       cur = cur->get_next();
       ++i;
-    }
+    } while (cur != head);
     return income;
   };
 
@@ -136,29 +135,29 @@ void HotRing::_move_head(HeadNode* head, ItemNode* cur) {
   size_t min_size = std::numeric_limits<size_t>::max();
 
   // find min income
-  while (i < size) {
+  ItemNode* head_node = cur;
+  do {
     if (calculate(cur) < min_size) {
       new_head = cur;
     }
     cur = cur->get_next();
     ++i;
-  }
+  } while (cur != head_node);
 
-  i = 0;
-  while (i < size) {
+  do {
     cur->reset_count();
     cur = cur->get_next();
     ++i;
-  }
+  } while (cur != head_node);
 
+  // INFO: set head already move the flag
   head->set_head(new_head);
-  head->reset_active();
-  head->reset_total_count();
+  // head->reset_active();
+  // head->reset_total_count();
 }
 
 // rehash the hash table, not consider multi threads
 void HotRing::_rehash() {
-  std::cout << "rehash\n";
   // double enlarge the hash table
   std::vector<std::unique_ptr<HeadNode>> new_table;
   size_t old_size = _table.size();
@@ -166,21 +165,19 @@ void HotRing::_rehash() {
 
   --_tag_bits;
   assert(_tag_bits > 0);
-  _tag_mask = (1 << _tag_bits) - 1;
+  _tag_mask = (1UL << _tag_bits) - 1;
 
+  size_t split = 1UL << _tag_bits;
   // x -> 2x + 1
-  size_t split = 1 << _tag_bits;
-  for (int i = 0; i < old_size; ++i) {
+  for (size_t i = 0; i < old_size; ++i) {
     if (_table[i] != nullptr) {
       auto* cur = _table[i]->get_head();
       bool first_bigger = false;
-      size_t first_size = 0;
-      size_t total_size = _table[i]->get_size();
       if (cur->get_tag() >= split) {
         first_bigger = true;
-        new_table[(i << 2) + 1] = std::move(_table[i]);
+        new_table[(i << 1) + 1] = std::move(_table[i]);
       } else {
-        new_table[(i << 2)] = std::move(_table[i]);
+        new_table[(i << 1)] = std::move(_table[i]);
       }
 
       // 1 2 [3] 4 5
@@ -195,6 +192,10 @@ void HotRing::_rehash() {
         }
 
         if (cur->get_tag() > next->get_tag()) {
+          if (next->get_tag() >= split ||
+              cur->get_tag() < split) {  // no need to split
+            break;
+          }
           biggest_node = cur;
         } else if (cur->get_tag() < split && next->get_tag() >= split) {
           split_node = cur;
@@ -213,13 +214,20 @@ void HotRing::_rehash() {
         split_node->set_next(tmp);
 
         if (first_bigger) {
-          new_table[i << 2] = std::make_unique<HeadNode>(split_node);
+          new_table[i << 1] = std::make_unique<HeadNode>(split_node);
         } else {
-          new_table[(i << 2) + 1] = std::make_unique<HeadNode>(biggest_node);
+          new_table[(i << 1) + 1] = std::make_unique<HeadNode>(biggest_node);
         }
+        // adjust the tag
+        new_table[(i << 1) + 1]->adjust_tag(split);
+      } else if (first_bigger) {
+        new_table[(i << 1) + 1]->adjust_tag(split);
       }
     }
   }
+
+  // replace
+  _table = std::move(new_table);
 }
 
 }  // namespace hotring

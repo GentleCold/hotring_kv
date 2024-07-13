@@ -2,6 +2,7 @@
 #define INCLUDE_INCLUDE_HRNODE_HPP_
 
 #include <cassert>
+#include <iostream>
 #include <string>
 
 namespace hotring {
@@ -22,17 +23,26 @@ class ItemNode {
   const std::string& get_value() const& { return _value; }
 
   void set_tag(size_t tag) { _tag = tag; }
-  void set_next(ItemNode* ptr) { _next = ptr; }
+  void set_next(ItemNode* ptr) {
+    // must remain the flag
+    auto intn = reinterpret_cast<size_t>(_next);
+    auto intp = reinterpret_cast<size_t>(ptr);
+    auto flag = intn & (~ADDRESS_MASK);
+    intp += flag;
+    _next = reinterpret_cast<ItemNode*>(intp);
+  }
   void set_value(const std::string& value) { _value = value; }
 
   ItemNode* get_next();
 
   // if rehash is true, then rehash is starting
+  // unuse
   bool is_rehash();
   void set_rehash();
   void reset_rehash();
 
   // if occupied is true, then the node is being used
+  // unuse
   bool is_occupied();
   void set_occupied();
   void reset_occupied();
@@ -71,11 +81,6 @@ class HeadNode {
   ItemNode* get_head();
   void set_head(ItemNode* ptr);
 
-  size_t get_size() const { return _size; }
-  void set_size(size_t size) { _size = size; }
-  void inc_size() { ++_size; }
-  void dec_size() { --_size; }
-
   // if active is true, then make statistical sampling
   bool is_active();
   void set_active();
@@ -86,19 +91,20 @@ class HeadNode {
   void inc_total_count();
   void reset_total_count();
 
+  // for rehash
+  void adjust_tag(size_t split);
+
   // safe release
   ~HeadNode() {
-    ItemNode* cur = get_head();
-    while (_size) {
-      --_size;
+    ItemNode *head = get_head(), *cur = head;
+    do {
       ItemNode* next = cur->get_next();
       delete cur;
       cur = next;
-    }
+    } while (cur != head);
   };
 
  private:
-  size_t _size = 1;
   // 1bit active + 15bits counter + 48bits address
   ItemNode* _head;
 
