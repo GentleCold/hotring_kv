@@ -14,7 +14,7 @@
 
 int main() {
   std::unordered_map<std::string, std::string> table;
-  table.max_load_factor(1.3);
+  table.max_load_factor(1.5);
 
   // create socket
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
