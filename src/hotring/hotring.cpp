@@ -27,12 +27,25 @@ void HotRing::put(const std::string& key, const std::string& value) {
     ++access;
     // update
     if ((*cur) == (*item)) {
+      bool active = head->is_active();
+      if (active) {
+        head->inc_total_count();
+        cur->inc_count();
+      }
       cur->set_value(value);
       delete item;
 
       // record access
       ++_total_request;
       _total_access += access;
+
+      if (!active && _total_request % HOTSPOT_R == 0 &&
+          head->get_head() != cur) {
+        // find, but not the head node, start sampling
+        head->set_active();
+        _sample_num = HOTSPOT_R;  // in paper, it's the size of ring
+      }
+
       break;
     }
 
@@ -73,15 +86,18 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
   size_t access = 0;
   while (true) {
     ++access;
-    if (active) {
-      cur->inc_count();
-    }
 
     // compare tag first (tag, key)
     if ((*cur) == compare) {
+      if (active) {
+        cur->inc_count();
+        head->inc_total_count();
+      }
       find = true;
       ret = cur->get_value();
 
+      ++_total_request;
+      _total_access += access;
       if (!active && _total_request % HOTSPOT_R == 0 &&
           head->get_head() != cur) {
         // find, but not the head node, start sampling
@@ -107,13 +123,7 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
     ++_total_access;  // access for next item
   }
 
-  if (find) {
-    ++_total_request;
-    _total_access += access;
-  }
-
   if (active) {
-    head->inc_total_count();
     if (head->get_total_count() >= _sample_num) {  // move head to hotspot
       _move_head(head, cur);
     }

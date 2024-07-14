@@ -11,7 +11,7 @@ namespace hotring {
 
 constexpr size_t HOTSPOT_R = 5;        // for hotspot
 constexpr size_t MAX_LOAD_FACTOR = 2;  // for rehash
-constexpr size_t MAX_BUCKET_SIZE = 32768;
+constexpr size_t MAX_BUCKET_SIZE = 65536;
 
 class HotRing {
  public:
