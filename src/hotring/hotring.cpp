@@ -118,7 +118,9 @@ std::pair<bool, std::string> HotRing::read(const std::string& key) {
       _move_head(head, cur);
     }
   } else if (_get_average_load() >= MAX_LOAD_FACTOR) {
-    _rehash();
+    if (_table.size() < MAX_BUCKET_SIZE) {
+      _rehash();
+    }
     // reset average load
     _total_request = 0;
     _total_access = 0;
